@@ -12,6 +12,7 @@ import (
 	"github.com/Jeffail/gabs"
 	"strconv"
 	"github.com/gorilla/mux"
+	"strings"
 )
 
 
@@ -28,14 +29,14 @@ var NewFigureHandler = http.HandlerFunc(func(response http.ResponseWriter, reque
 	ctx := appengine.NewContext(request)
 	body, _ := ioutil.ReadAll(request.Body)
 	json, _ := gabs.ParseJSON(body)
-	dist, err := strconv.Atoi(json.Path("Distance").String())
+	dist, err := strconv.Atoi(json.Path("distance").String())
 	if err != nil {
 		responseMessage("Distance isn't int.", response, request)
 		return
 	}
 
 	newFigure := &model.FigureHighScore{
-		FigureID: ClearString(json.Path("figureID").String()),
+		FigureID: strings.ToLower(ClearString(json.Path("figureID").String())),
 		Distance: dist,
 	}
 	key := datastore.NewIncompleteKey(ctx, "FigureHighScore", nil)
@@ -87,7 +88,7 @@ var GetPlayerListHandler = http.HandlerFunc(func(response http.ResponseWriter, r
 var GetResultByFigureHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 	ctx := appengine.NewContext(request)
 
-	id := mux.Vars(request)["id"]
+	id := strings.ToLower(mux.Vars(request)["id"])
 	q := datastore.NewQuery("Result").Filter("FigureID =", id)
 	var results []model.Result
 	_, err := q.GetAll(ctx, &results)
@@ -103,7 +104,7 @@ var GetResultByFigureHandler = http.HandlerFunc(func(response http.ResponseWrite
 var GetMaxResultHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 	ctx := appengine.NewContext(request)
 
-	id := mux.Vars(request)["id"]
+	id := strings.ToLower(mux.Vars(request)["id"])
 	q := datastore.NewQuery("Result").Filter("FigureID =", id)
 	var results []model.Result
 	_, err := q.GetAll(ctx, &results)
@@ -211,7 +212,7 @@ var NewResultHandler = http.HandlerFunc(func(response http.ResponseWriter, reque
 		http.Error(response, "Figure with this ID doesn't exist", http.StatusForbidden)
 		return
 	}
-
+	message := "New Result is added."
 	//check token is legal or generate new if token is empty
 	if token == "" {
 		token , err = NewPlayer(ctx)
@@ -219,6 +220,7 @@ var NewResultHandler = http.HandlerFunc(func(response http.ResponseWriter, reque
 			responseMessage("Can't create new token for user", response, request)
 			return
 		}
+		message = token
 	} else {
 		exist, err := PlayerExist(token, ctx)
 		if err != nil {
@@ -247,6 +249,6 @@ var NewResultHandler = http.HandlerFunc(func(response http.ResponseWriter, reque
 		return
 	}
 
-	responseMessage("New Result is added.", response, request)
+	responseMessage(message, response, request)
  })
 

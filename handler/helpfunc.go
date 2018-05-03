@@ -108,7 +108,7 @@ func FigureExist(id string, ctx context.Context) (bool, error) {
 }
 
 func SortResults(results []model.Result) []model.Result {
-	sort.Slice(results, func(i, j int) bool { return results[i].LapTime > results[j].LapTime })
+	sort.Slice(results, func(i, j int) bool { return results[i].LapTime < results[j].LapTime })
 
 	return results
 }
@@ -116,7 +116,7 @@ func SortResults(results []model.Result) []model.Result {
 func MaxResult(results []model.Result) model.Result {
 	max := 0
 	for i, res := range results {
-		if res.LapTime > results[max].LapTime {
+		if res.LapTime < results[max].LapTime {
 			max = i
 		}
 	}

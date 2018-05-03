@@ -5,21 +5,21 @@ import (
 )
 
 type FigureHighScore struct {
-	FigureID 	string
-	Distance 	int
+	FigureID 	string `json:"figureID"`
+	Distance 	int    `json:"distance"`
 }
 
 type Player struct {
-	Token 		string
-	Registered  time.Time
+	Token 		string 	  `json:"token"`
+	Registered  time.Time `json:"registred"`
 }
 
 type Result struct {
-	ResID       string
-	FigureID 	string
-	LapTime 	int
-	Username  	string
-	Token 		string
+	ResID       string `json:"resID"`
+	FigureID 	string `json:"figureID"`
+	LapTime 	int    `json:"lapTime"`
+	Username  	string `json:"username"`
+	Token 		string `json:"token"`
 }
 
 
