@@ -23,6 +23,7 @@ func init() {
 	r.HandleFunc("/api/players/{token}", handler.GetResultByPlayerHandler).Methods("GET")
 	r.HandleFunc("/api/max/{id}", handler.GetMaxResultHandler).Methods("GET")
 
+
 	r.HandleFunc("/api/results/{id}", handler.DeleteResultHandler).Methods("DELETE")
 	r.HandleFunc("/api/results/trash/{id}", handler.TrashResultHandler).Methods("PUT")
 	r.HandleFunc("/api/results/undotrash/{id}", handler.UndoTrashResultHandler).Methods("PUT")
