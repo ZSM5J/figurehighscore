@@ -20,6 +20,7 @@ type Result struct {
 	LapTime 	int    `json:"lapTime"`
 	Username  	string `json:"username"`
 	Token 		string `json:"token"`
+	Trashed     bool   `json:"trashed"`
 }
 
 

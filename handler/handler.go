@@ -89,7 +89,7 @@ var GetResultByFigureHandler = http.HandlerFunc(func(response http.ResponseWrite
 	ctx := appengine.NewContext(request)
 
 	id := strings.ToLower(mux.Vars(request)["id"])
-	q := datastore.NewQuery("Result").Filter("FigureID =", id)
+	q := datastore.NewQuery("Result").Filter("FigureID =", id).Filter("Trashed =", false)
 	var results []model.Result
 	_, err := q.GetAll(ctx, &results)
 	if err!= nil {
@@ -148,6 +148,70 @@ var DeleteResultHandler = http.HandlerFunc(func(response http.ResponseWriter, re
 	}
 
 	responseMessage("Result is deleted.", response, request)
+})
+
+var TrashResultHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+	ctx := appengine.NewContext(request)
+
+	id := mux.Vars(request)["id"]
+	q := datastore.NewQuery("Result").Filter("ResID =", id)
+	var results []model.Result
+	keys, err := q.GetAll(ctx, &results)
+	if err!= nil || len(results) == 0 {
+		http.Error(response, "Can't access to cloud datastore", http.StatusForbidden)
+		return
+	}
+
+	newResult := &model.Result{
+		ResID:   results[0].ResID,
+		FigureID: results[0].FigureID,
+		LapTime: results[0].LapTime,
+		Username: results[0].Username,
+		Token: results[0].Token,
+		Trashed: true,
+	}
+
+
+	for _, k := range keys {
+		if _, err := datastore.Put(ctx, k, newResult); err != nil {
+			http.Error(response, "Can't save to cloud datastore", http.StatusForbidden)
+			return
+		}
+	}
+
+	responseMessage("Result is trashed.", response, request)
+})
+
+var UndoTrashResultHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+	ctx := appengine.NewContext(request)
+
+	id := mux.Vars(request)["id"]
+	q := datastore.NewQuery("Result").Filter("ResID =", id)
+	var results []model.Result
+	keys, err := q.GetAll(ctx, &results)
+	if err!= nil || len(results) == 0 {
+		http.Error(response, "Can't access to cloud datastore", http.StatusForbidden)
+		return
+	}
+
+	newResult := &model.Result{
+		ResID:   results[0].ResID,
+		FigureID: results[0].FigureID,
+		LapTime: results[0].LapTime,
+		Username: results[0].Username,
+		Token: results[0].Token,
+		Trashed: false,
+	}
+
+
+	for _, k := range keys {
+		if _, err := datastore.Put(ctx, k, newResult); err != nil {
+			http.Error(response, "Can't save to cloud datastore", http.StatusForbidden)
+			return
+		}
+	}
+
+	responseMessage("Trash is undo.", response, request)
 })
 
 var DeleteFigureHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
@@ -239,6 +303,7 @@ var NewResultHandler = http.HandlerFunc(func(response http.ResponseWriter, reque
 		LapTime: lapTime,
 		Username: username,
 		Token: token,
+		Trashed: false,
 	}
 
 
