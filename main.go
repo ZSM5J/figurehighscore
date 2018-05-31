@@ -17,9 +17,11 @@ func init() {
 
 	r.HandleFunc("/api/figures", handler.GetFigureListHandler).Methods("GET")
 	r.HandleFunc("/api/results", handler.GetResultListHandler).Methods("GET")
+	r.HandleFunc("/api/results/last25", handler.GetLastResultHandler).Methods("GET")
 	r.HandleFunc("/api/players", handler.GetPlayerListHandler).Methods("GET")
 
 	r.HandleFunc("/api/figures/{id}", handler.GetResultByFigureHandler).Methods("GET")
+	r.HandleFunc("/api/figures/trash/{id}", handler.GetTrashResultByFigureHandler).Methods("GET")
 	r.HandleFunc("/api/players/{token}", handler.GetResultByPlayerHandler).Methods("GET")
 	r.HandleFunc("/api/max/{id}", handler.GetMaxResultHandler).Methods("GET")
 

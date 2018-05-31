@@ -73,6 +73,18 @@ var GetResultListHandler = http.HandlerFunc(func(response http.ResponseWriter, r
 	responseJSON(results, response, request)
 })
 
+var GetLastResultHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+	ctx := appengine.NewContext(request)
+	q := datastore.NewQuery("Result").Order("-Created").Limit(25)
+	var results []model.Result
+	_, err := q.GetAll(ctx, &results)
+	if err!= nil {
+		responseMessage("Can't access cloud datastore", response, request)
+		return
+	}
+	responseJSON(results, response, request)
+})
+
 var GetPlayerListHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 	ctx := appengine.NewContext(request)
 	q := datastore.NewQuery("Player")
@@ -89,7 +101,23 @@ var GetResultByFigureHandler = http.HandlerFunc(func(response http.ResponseWrite
 	ctx := appengine.NewContext(request)
 
 	id := strings.ToLower(mux.Vars(request)["id"])
-	q := datastore.NewQuery("Result").Filter("FigureID =", id).Filter("Trashed =", false)
+	q := datastore.NewQuery("Result").Filter("FigureID =", id).Filter("Trashed =", false).Limit(50)
+	var results []model.Result
+	_, err := q.GetAll(ctx, &results)
+	if err!= nil {
+		http.Error(response, "Can't access to cloud datastore", http.StatusForbidden)
+		return
+	}
+
+	results = SortResults(results)
+	responseJSON(results, response, request)
+})
+
+var GetTrashResultByFigureHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+	ctx := appengine.NewContext(request)
+
+	id := strings.ToLower(mux.Vars(request)["id"])
+	q := datastore.NewQuery("Result").Filter("FigureID =", id).Filter("Trashed =", true)
 	var results []model.Result
 	_, err := q.GetAll(ctx, &results)
 	if err!= nil {
@@ -168,6 +196,7 @@ var TrashResultHandler = http.HandlerFunc(func(response http.ResponseWriter, req
 		LapTime: results[0].LapTime,
 		Username: results[0].Username,
 		Token: results[0].Token,
+		Created: results[0].Created,
 		Trashed: true,
 	}
 
@@ -200,6 +229,7 @@ var UndoTrashResultHandler = http.HandlerFunc(func(response http.ResponseWriter,
 		LapTime: results[0].LapTime,
 		Username: results[0].Username,
 		Token: results[0].Token,
+		Created: results[0].Created,
 		Trashed: false,
 	}
 
@@ -304,6 +334,7 @@ var NewResultHandler = http.HandlerFunc(func(response http.ResponseWriter, reque
 		Username: username,
 		Token: token,
 		Trashed: false,
+		Created: time.Now(),
 	}
 
 
