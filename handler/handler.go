@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"github.com/gorilla/mux"
 	"strings"
+	"github.com/figurehighscore/config"
 )
 
 
@@ -246,6 +247,14 @@ var UndoTrashResultHandler = http.HandlerFunc(func(response http.ResponseWriter,
 
 var DeleteFigureHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 	ctx := appengine.NewContext(request)
+	body, _ := ioutil.ReadAll(request.Body)
+	json, _ := gabs.ParseJSON(body)
+	username := ClearString(json.Path("username").String())
+	password := ClearString(json.Path("password").String())
+	if username != config.Config.Admin.User || password != config.Config.Admin.Pass {
+		http.Error(response, "no access", http.StatusForbidden)
+		return
+	}
 
 	id := mux.Vars(request)["id"]
 	q := datastore.NewQuery("FigureHighScore").Filter("FigureID =", id)
@@ -347,4 +356,18 @@ var NewResultHandler = http.HandlerFunc(func(response http.ResponseWriter, reque
 
 	responseMessage(message, response, request)
  })
+
+
+var LoginHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+	body, _ := ioutil.ReadAll(request.Body)
+	json, _ := gabs.ParseJSON(body)
+	username := ClearString(json.Path("username").String())
+	password := ClearString(json.Path("password").String())
+	if username == config.Config.Admin.User && password == config.Config.Admin.Pass {
+		responseMessage("login", response, request)
+		return
+	}
+
+	responseMessage("bad login or password", response, request)
+})
 
